@@ -1,0 +1,23 @@
+name = "declgraph"
+description = "Declaration-level dependency graphs of Lean packages."
+defaultTargets = ["declgraph"]
+testDriver = "declgraph_test"
+
+[[lean_lib]]
+name = "DeclGraph"
+
+# `lake exe declgraph OUT.dot` draws the declaration graph of the current package.
+[[lean_exe]]
+name = "declgraph"
+root = "Main"
+# Needed to elaborate a `lakefile.lean` when computing the default roots.
+supportInterpreter = true
+
+# Fixture with known edges, checked by `lake test`.
+[[lean_lib]]
+name = "DeclGraphTest"
+
+[[lean_exe]]
+name = "declgraph_test"
+root = "TestMain"
+supportInterpreter = true
