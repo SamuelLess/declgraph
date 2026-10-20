@@ -14,6 +14,7 @@ def cases : List (String × Config × List String) := [
   ("theorems", { scope := #[`DeclGraphTest] }, [
     "Fixture.double_mul -> Fixture.double_eq",
     "Fixture.quad -> Fixture.double_mul",
+    "Fixture.small_double -> Fixture.double_eq",
     -- through the definition `twice`
     "Fixture.twice_spec -> Fixture.double_eq"]),
   ("target", { scope := #[`DeclGraphTest], targets := #[`Fixture.quad] }, [
@@ -40,12 +41,18 @@ def main : IO UInt32 := do
     if actual.toArray.qsort (· < ·) != expected.toArray.qsort (· < ·) then
       failed := true
       IO.eprintln s!"FAIL {label}\n  expected: {expected}\n  actual:   {actual}"
-  -- Node attributes: private names lose their prefix; generated constants never appear.
+  -- Node attributes: private names lose their prefix, generated constants never appear, fields
+  -- are fields even when `Prop`-valued, and lines are those of the declaration's name.
   let .ok g := build env { scope := #[`DeclGraphTest], kind := .all } | throw <| IO.userError "all"
-  let labels := g.nodes.map (userName ·.name)
-  unless labels.contains `Fixture.double_eq && !labels.any (·.toString.contains "match_") do
+  let attrs := g.nodes.map fun n => (userName n.name, n.kind, n.line)
+  for expected in [(`Fixture.double_eq, "theorem", 9), (`Fixture.double_mul, "theorem", 13),
+      (`Fixture.Small.le, "field", 25), (`Fixture.Point.x, "field", 4)] do
+    unless attrs.contains expected do
+      failed := true
+      IO.eprintln s!"FAIL node {expected.1}: {attrs.find? (·.1 == expected.1)}"
+  if attrs.any (·.1.toString.contains "match_") then
     failed := true
-    IO.eprintln s!"FAIL labels: {labels}"
+    IO.eprintln s!"FAIL generated nodes: {attrs.map (·.1)}"
   -- Golden output: the committed example.
   let .ok g := build env { scope := #[`DeclGraphTest] } | throw <| IO.userError "golden"
   let dot := g.toDot "Declaration dependencies"

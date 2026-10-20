@@ -1,4 +1,4 @@
-// 6 nodes, 3 edges. Arrow: declaration → declaration it uses.
+// 7 nodes, 4 edges. Arrow: declaration → declaration it uses.
 digraph declgraph {
   graph [rankdir=LR, label="Declaration dependencies", labelloc=t, fontsize=20];
   node [shape=box, style="rounded,filled", fillcolor="#edf2f7", fontname="sans-serif", fontsize=10];
@@ -6,9 +6,10 @@ digraph declgraph {
   subgraph cluster_0 {
     label="DeclGraphTest.Basic";
     color="#cbd5e0";
-    "Fixture.double_mul" [label="Fixture.double_mul", tooltip="DeclGraphTest/Basic.lean:12"];
-    "Fixture.twice_spec" [label="Fixture.twice_spec", tooltip="DeclGraphTest/Basic.lean:18"];
-    "Fixture.x_mk" [label="Fixture.x_mk", tooltip="DeclGraphTest/Basic.lean:20"];
+    "Fixture.double_mul" [label="Fixture.double_mul", tooltip="DeclGraphTest/Basic.lean:13"];
+    "Fixture.small_double" [label="Fixture.small_double", tooltip="DeclGraphTest/Basic.lean:27"];
+    "Fixture.twice_spec" [label="Fixture.twice_spec", tooltip="DeclGraphTest/Basic.lean:19"];
+    "Fixture.x_mk" [label="Fixture.x_mk", tooltip="DeclGraphTest/Basic.lean:21"];
     "_private.DeclGraphTest.Basic.0.Fixture.double_eq" [label="Fixture.double_eq", tooltip="DeclGraphTest/Basic.lean:9"];
   }
   subgraph cluster_1 {
@@ -19,5 +20,6 @@ digraph declgraph {
   }
   "Fixture.double_mul" -> "_private.DeclGraphTest.Basic.0.Fixture.double_eq";
   "Fixture.quad" -> "Fixture.double_mul";
+  "Fixture.small_double" -> "_private.DeclGraphTest.Basic.0.Fixture.double_eq";
   "Fixture.twice_spec" -> "_private.DeclGraphTest.Basic.0.Fixture.double_eq";
 }

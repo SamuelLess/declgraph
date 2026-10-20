@@ -53,7 +53,7 @@ def moduleOf? (env : Environment) (n : Name) : Option Name :=
 
 def lineOf? (env : Environment) (n : Name) : Option Nat :=
   (declRangeExt.find? (level := .exported) env n <|> declRangeExt.find? (level := .server) env n)
-    |>.map (·.range.pos.line)
+    |>.map (·.selectionRange.pos.line)
 
 /-- Compiler-generated constants: auxiliary recursors, matchers, `proof_`, `eq_1`, … -/
 def isGenerated (env : Environment) (n : Name) : Bool :=
@@ -61,22 +61,24 @@ def isGenerated (env : Environment) (n : Name) : Bool :=
     isRecCore env n || Meta.isMatcherCore env n
 
 def kindOf (env : Environment) : ConstantInfo → String
-  | .thmInfo _ => "theorem"
   | .axiomInfo _ => "axiom"
   | .opaqueInfo _ => "opaque"
   | .quotInfo _ => "quot"
   | .recInfo _ => "recursor"
   | .ctorInfo _ => "constructor"
   | .inductInfo i => if isStructure env i.name then "structure" else "inductive"
-  | .defnInfo i => if (env.getProjectionFnInfo? i.name).isSome then "field" else "def"
+  | info@(.thmInfo _) | info@(.defnInfo _) =>
+    if (env.getProjectionFnInfo? info.name).isSome then "field"
+    else if info.isTheorem then "theorem" else "def"
 
 def inScope (env : Environment) (cfg : Config) (n : Name) : Bool :=
   (moduleOf? env n).any fun m => cfg.scope.any (·.isPrefixOf m)
 
-/-- `n` is a node: a source declaration of the included modules matching `cfg.kind`. -/
+/-- `n` is a node: a source declaration of the included modules matching `cfg.kind`.
+Fields of `Prop`-valued structures are theorems to Lean but fields to `.theorem`. -/
 def isNode (env : Environment) (cfg : Config) (n : Name) : Bool :=
   inScope env cfg n && !isGenerated env n && (lineOf? env n).isSome &&
-    (env.find? n).any fun info => cfg.kind == .all || info.isTheorem
+    (env.find? n).any fun info => cfg.kind == .all || kindOf env info == "theorem"
 
 /-- Constants used by a declaration. An inductive type uses what its type uses, not its
 constructors, which in turn use the type. -/
